@@ -1,5 +1,5 @@
-#ifndef _DATASTRUCTURES_H_
-#define _DATASTRUCTURES_H_
+#ifndef _DLLIB_H_
+#define _DLLIB_H_
 
 #include "stdlib.h"
 #include "malloc.h"
