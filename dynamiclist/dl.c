@@ -26,7 +26,7 @@ void ClearDL(DynamicList *dl) {
 DynamicList CopyDL(const DynamicList dl) {
     DynamicList dlCopy = {.length=dl.length, .appendIndex = dl.appendIndex, .elementSize = dl.elementSize};
     dlCopy.array = (void *)calloc(dl.length, dl.elementSize);
-    memcpy(dlCopy.array, dl.array, dl.elementSize*dl.appendIndex);
+    memcpy(dlCopy.array, dl.array, dl.elementSize*dl.length);
 
     return dlCopy;
 }
@@ -35,8 +35,17 @@ ValPtr GetDL(const DynamicList dl, const unsigned int index) {
     return dl.array + index*dl.elementSize;
 }
 
-void SetDL(DynamicList dl, const unsigned int index, ValPtr valuePtr) {
-    memcpy(GetDL(dl, index), valuePtr, dl.elementSize);
+void SetDL(DynamicList *dl, const unsigned int index, ValPtr valuePtr) {
+    if (dl->appendIndex <= index) {
+        if (dl->length <= index) {
+            const unsigned int prevLength = dl->length;
+            while (dl->length <= index) dl->length*=2;
+            dl->array = realloc(dl->array, dl->length*dl->elementSize);
+            memset(GetDL(*dl, prevLength), 0, (dl->length - prevLength)*dl->elementSize);
+        }
+        dl->appendIndex = index + 1;
+    }
+    memcpy(GetDL(*dl, index), valuePtr, dl->elementSize);
 }
 
 unsigned int CountDL(const DynamicList dl, ValPtr valuePtr) {
@@ -52,9 +61,10 @@ unsigned int ExtendDL(DynamicList *dest, const DynamicList src) {
         return 0;
     }
     if (dest->length < dest->appendIndex + src.appendIndex) {
-        dest->length = 1;
+        const unsigned int prevLength = dest->length;
         while (dest->length < dest->appendIndex + src.appendIndex) dest->length*=2;
         dest->array = realloc(dest->array, dest->length*dest->elementSize);
+        memset(GetDL(*dest, prevLength), 0, (dest->length - prevLength)*dest->elementSize);
     }
     memcpy(dest->array + dest->appendIndex*dest->elementSize, src.array, src.appendIndex*src.elementSize);
     dest->appendIndex += src.appendIndex;
@@ -70,17 +80,17 @@ int IndexDL(const DynamicList dl, ValPtr valuePtr) {
     return -1;
 }
 
-void InsertDL(DynamicList *dl, ValPtr valuePtr, const unsigned int pos) {
-    if (pos >= dl->appendIndex) {
-        return AppendDL(dl, valuePtr);
+void InsertDL(DynamicList *dl, ValPtr valuePtr, const unsigned int index) {
+    if (index >= dl->appendIndex) {
+        return SetDL(dl, index, valuePtr);
     }
     if (dl->length <= dl->appendIndex) {
         dl->length *= 2;
         dl->array = realloc(dl->array, dl->length * dl->elementSize);
     }
 
-    memmove(dl->array + (pos+1)*dl->elementSize, dl->array + pos*dl->elementSize, (dl->appendIndex-pos)*dl->elementSize);
-    memcpy(GetDL(*dl, pos), valuePtr, dl->elementSize);
+    memmove(dl->array + (index+1)*dl->elementSize, dl->array + index*dl->elementSize, (dl->appendIndex-index)*dl->elementSize);
+    SetDL(dl, index, valuePtr);
     dl->appendIndex++;
 }
 
