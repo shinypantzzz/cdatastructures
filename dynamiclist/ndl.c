@@ -59,7 +59,7 @@ void SetNDL(NullableDynamicList *dl, const unsigned int index, ValPtr valuePtr) 
 unsigned int CountNDL(const NullableDynamicList dl, ValPtr valuePtr) {
     int count = 0;
     for (int i = 0; i < dl.appendIndex; i++) {
-        if (memcmp(valuePtr, GetDL(dl, i), dl.elementSize-1) == 0) count++;
+        if (!IsNullNDL(dl, i) && memcmp(valuePtr, GetDL(dl, i), dl.elementSize-1) == 0) count++;
     }
     return count;
 }
