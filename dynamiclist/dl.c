@@ -1,6 +1,6 @@
 #include "dllib.h"
 
-DynamicList CreateDL(const unsigned int elementSize) {
+DynamicList CreateDL(const uint8_t elementSize) {
     DynamicList dl = {.length=DL_INITIAL_LENGTH, .appendIndex = 0, .elementSize = elementSize};
     dl.array = (void *)calloc(dl.length, dl.elementSize);
     return dl;
@@ -32,14 +32,14 @@ DynamicList CopyDL(const DynamicList dl) {
     return dlCopy;
 }
 
-ValPtr GetDL(const DynamicList dl, const unsigned int index) {
+ValPtr GetDL(const DynamicList dl, const uint32_t index) {
     return dl.array + index*dl.elementSize;
 }
 
-void SetDL(DynamicList *dl, const unsigned int index, ValPtr valuePtr) {
+void SetDL(DynamicList *dl, const uint32_t index, ValPtr valuePtr) {
     if (dl->appendIndex <= index) {
         if (dl->length <= index) {
-            const unsigned int prevLength = dl->length;
+            const uint32_t prevLength = dl->length;
             while (dl->length <= index) dl->length*=2;
             dl->array = realloc(dl->array, dl->length*dl->elementSize);
             memset(GetDL(*dl, prevLength), 0, (dl->length - prevLength)*dl->elementSize);
@@ -49,20 +49,20 @@ void SetDL(DynamicList *dl, const unsigned int index, ValPtr valuePtr) {
     memcpy(GetDL(*dl, index), valuePtr, dl->elementSize);
 }
 
-unsigned int CountDL(const DynamicList dl, ValPtr valuePtr) {
-    int count = 0;
-    for (int i = 0; i < dl.appendIndex; i++) {
+uint32_t CountDL(const DynamicList dl, ValPtr valuePtr) {
+    uint32_t count = 0;
+    for (uint32_t i = 0; i < dl.appendIndex; i++) {
         if (memcmp(valuePtr, GetDL(dl, i), dl.elementSize) == 0) count++;
     }
     return count;
 }
 
-unsigned int ExtendDL(DynamicList *dest, const DynamicList src) {
+uint8_t ExtendDL(DynamicList *dest, const DynamicList src) {
     if (dest->elementSize != src.elementSize) {
         return 0;
     }
     if (dest->length < dest->appendIndex + src.appendIndex) {
-        const unsigned int prevLength = dest->length;
+        const uint32_t prevLength = dest->length;
         while (dest->length < dest->appendIndex + src.appendIndex) dest->length*=2;
         dest->array = realloc(dest->array, dest->length*dest->elementSize);
         memset(GetDL(*dest, prevLength), 0, (dest->length - prevLength)*dest->elementSize);
@@ -72,8 +72,8 @@ unsigned int ExtendDL(DynamicList *dest, const DynamicList src) {
     return 1;
 }
 
-int IndexDL(const DynamicList dl, ValPtr valuePtr) {
-    for (unsigned int i = 0; i < dl.appendIndex; i++) {
+int64_t IndexDL(const DynamicList dl, ValPtr valuePtr) {
+    for (uint32_t i = 0; i < dl.appendIndex; i++) {
         if (memcmp(GetDL(dl, i), valuePtr, dl.elementSize) == 0) {
             return i;
         }
@@ -81,7 +81,7 @@ int IndexDL(const DynamicList dl, ValPtr valuePtr) {
     return -1;
 }
 
-void InsertDL(DynamicList *dl, ValPtr valuePtr, const unsigned int index) {
+void InsertDL(DynamicList *dl, ValPtr valuePtr, const uint32_t index) {
     if (index >= dl->appendIndex) {
         return SetDL(dl, index, valuePtr);
     }
@@ -101,7 +101,7 @@ ValPtr PopLastDL(DynamicList *dl) {
     return GetDL(*dl, --dl->appendIndex);
 }
 
-ValPtr PopDL(DynamicList *dl, const unsigned int index) {
+ValPtr PopDL(DynamicList *dl, const uint32_t index) {
     if (dl->appendIndex <= 0) return NULL;
     if (index >= dl->appendIndex - 1) return PopLastDL(dl);
     void *tmp = (void *)malloc(dl->elementSize);
@@ -112,15 +112,15 @@ ValPtr PopDL(DynamicList *dl, const unsigned int index) {
     return GetDL(*dl, dl->appendIndex);
 }
 
-unsigned int RemoveDL(DynamicList *dl, ValPtr valuePtr) {
-    unsigned int index = IndexDL(*dl, valuePtr);
+uint8_t RemoveDL(DynamicList *dl, ValPtr valuePtr) {
+    int64_t index = IndexDL(*dl, valuePtr);
     if (index == -1) return 0;
-    PopDL(dl, index);
+    PopDL(dl, (uint32_t)index);
     return 1;
 }
 
 void ReverseDL(DynamicList dl) {
-    unsigned int l = 0, r = dl.appendIndex - 1;
+    uint32_t l = 0, r = dl.appendIndex - 1;
     void *tmp = (void *)malloc(dl.elementSize);
     while(l < r) {
         memcpy(tmp, GetDL(dl, l), dl.elementSize);
@@ -135,6 +135,6 @@ void SortDL(DynamicList dl, int (compFunc)(const void *, const void *)) {
     qsort(dl.array, dl.appendIndex, dl.elementSize, compFunc);
 }
 
-unsigned int LengthDL(const DynamicList dl) {
+uint32_t LengthDL(const DynamicList dl) {
     return dl.appendIndex;
 }
