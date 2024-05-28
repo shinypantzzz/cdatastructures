@@ -20,6 +20,7 @@ void AppendDL(DynamicList *dl, ValPtr valuePtr) {
 }
 
 void ClearDL(DynamicList *dl) {
+    memset(dl->array, 0, dl->appendIndex*dl->elementSize);
     dl->appendIndex = 0;
 }
 
